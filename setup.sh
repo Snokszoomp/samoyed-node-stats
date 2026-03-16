@@ -3,6 +3,9 @@ set -euo pipefail
 
 PROJECT_NAME="LoudSamoyed"
 ENV_FILE=".env"
+REPO="Snokszoomp/samoyed-node-stats"
+BRANCH="main"
+ARCHIVE_URL="https://codeload.github.com/${REPO}/tar.gz/refs/heads/${BRANCH}"
 
 color() { local c="$1"; shift; printf "\033[%sm%s\033[0m" "$c" "$*"; }
 bold() { color "1" "$*"; }
@@ -19,6 +22,72 @@ TTY_IN="/dev/tty"
 if [[ ! -r "$TTY_IN" ]]; then
   TTY_IN=""
 fi
+
+fetch_url_to_file() {
+  local url="$1"
+  local out="$2"
+  if have_cmd curl; then
+    curl -fsSL "$url" -o "$out"
+    return
+  fi
+  if have_cmd wget; then
+    wget -q "$url" -O "$out"
+    return
+  fi
+  echo "$(red "Neither curl nor wget found.")"
+  exit 1
+}
+
+bootstrap_repo_if_needed() {
+  # If docker-compose.yml is present, assume we're already in repo root.
+  if [[ -f "docker-compose.yml" ]]; then
+    return
+  fi
+
+  local target_dir="${LOUDSAMOYED_DIR:-$PWD/samoyed-node-stats}"
+  mkdir -p "$target_dir"
+
+  if [[ -f "${target_dir}/docker-compose.yml" ]]; then
+    cd "$target_dir"
+    return
+  fi
+
+  echo "$(yellow "Project files not found here.")"
+  echo "Downloading ${REPO}@${BRANCH} into: $(cyan "$target_dir")"
+
+  if ! have_cmd tar; then
+    echo "$(red "tar not found.")"
+    exit 1
+  fi
+
+  local tmp
+  tmp="$(mktemp -d)"
+  local archive="${tmp}/repo.tar.gz"
+  fetch_url_to_file "$ARCHIVE_URL" "$archive"
+
+  tar -xzf "$archive" -C "$tmp"
+
+  # GitHub tarball root folder is usually <repo>-<branch>
+  local extracted=""
+  if [[ -d "${tmp}/samoyed-node-stats-${BRANCH}" ]]; then
+    extracted="${tmp}/samoyed-node-stats-${BRANCH}"
+  elif [[ -d "${tmp}/samoyed-node-stats-main" ]]; then
+    extracted="${tmp}/samoyed-node-stats-main"
+  else
+    extracted="$(ls -1d "${tmp}/"*/ 2>/dev/null | head -n 1 || true)"
+  fi
+
+  if [[ -z "$extracted" || ! -d "$extracted" ]]; then
+    echo "$(red "Failed to extract project archive.")"
+    exit 1
+  fi
+
+  # Copy project files into target dir (avoid rsync dependency)
+  cp -a "${extracted}/." "$target_dir/"
+  rm -rf "$tmp"
+
+  cd "$target_dir"
+}
 
 compose_cmd() {
   if have_cmd docker && docker compose version >/dev/null 2>&1; then
@@ -89,6 +158,8 @@ banner_en() {
 }
 
 main() {
+  bootstrap_repo_if_needed
+
   local compose
   compose="$(compose_cmd)"
   if [[ -z "$compose" ]]; then

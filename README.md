@@ -22,6 +22,12 @@ Wget-версия:
 wget -q "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" -O setup.sh && bash setup.sh
 ```
 
+По умолчанию установщик скачает проект в `./samoyed-node-stats/`. Можно указать свою папку:
+
+```bash
+LOUDSAMOYED_DIR="/opt/loudsamoyed" curl -fsSLO "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" && LOUDSAMOYED_DIR="/opt/loudsamoyed" bash setup.sh
+```
+
 ### Вариант B: скачать через git clone
 
 ```bash
