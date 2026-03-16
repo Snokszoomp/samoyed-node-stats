@@ -15,6 +15,11 @@ line() { printf "%s\n" "--------------------------------------------------------
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
+TTY_IN="/dev/tty"
+if [[ ! -r "$TTY_IN" ]]; then
+  TTY_IN=""
+fi
+
 compose_cmd() {
   if have_cmd docker && docker compose version >/dev/null 2>&1; then
     echo "docker compose"
@@ -32,10 +37,18 @@ prompt() {
   local def="${2-}"
   local ans
   if [[ -n "$def" ]]; then
-    read -r -p "$p [$def]: " ans || true
+    if [[ -n "${TTY_IN}" ]]; then
+      read -r -p "$p [$def]: " ans <"${TTY_IN}" || true
+    else
+      read -r -p "$p [$def]: " ans || true
+    fi
     echo "${ans:-$def}"
   else
-    read -r -p "$p: " ans || true
+    if [[ -n "${TTY_IN}" ]]; then
+      read -r -p "$p: " ans <"${TTY_IN}" || true
+    else
+      read -r -p "$p: " ans || true
+    fi
     echo "$ans"
   fi
 }
@@ -43,7 +56,11 @@ prompt() {
 prompt_secret() {
   local p="$1"
   local ans
-  read -r -s -p "$p: " ans || true
+  if [[ -n "${TTY_IN}" ]]; then
+    read -r -s -p "$p: " ans <"${TTY_IN}" || true
+  else
+    read -r -s -p "$p: " ans || true
+  fi
   echo
   echo "$ans"
 }
@@ -118,6 +135,10 @@ main() {
 
   if [[ -z "$tg_token" || -z "$tg_chat" || -z "$api_url" ]]; then
     echo "$(red "Missing required values.")"
+    echo
+    echo "Если вы запускали через пайп (curl | bash), убедитесь что ввод идёт из терминала."
+    echo "Рекомендуемый запуск одной командой без пайпа:"
+    echo "  curl -fsSLO \"https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh\" && bash setup.sh"
     exit 1
   fi
 

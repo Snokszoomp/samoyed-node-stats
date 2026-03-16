@@ -10,16 +10,16 @@ samoyed-node-stats / samoyed-loud — твой верный охраник в м
 
 ### Вариант A: скачать `setup.sh` одной командой (без git)
 
-Curl:
+Надёжный вариант (без `| bash`, чтобы ввод работал всегда):
 
 ```bash
-curl -fsSL "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" | bash
+curl -fsSLO "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" && bash setup.sh
 ```
 
-Wget:
+Wget-версия:
 
 ```bash
-wget -qO- "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" | bash
+wget -q "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" -O setup.sh && bash setup.sh
 ```
 
 ### Вариант B: скачать через git clone
