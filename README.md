@@ -8,13 +8,29 @@ samoyed-node-stats / samoyed-loud — твой верный охраник в м
 
 ## Быстрый старт (через curl)
 
-Запуск интерактивной установки:
+### Вариант A: скачать `setup.sh` одной командой (без git)
+
+Curl:
 
 ```bash
-curl -fsSL https://example.com/setup.sh | bash
+curl -fsSL "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" | bash
 ```
 
-Если вы уже в папке проекта, можно так:
+Wget:
+
+```bash
+wget -qO- "https://raw.githubusercontent.com/Snokszoomp/samoyed-node-stats/main/setup.sh" | bash
+```
+
+### Вариант B: скачать через git clone
+
+```bash
+git clone "https://github.com/Snokszoomp/samoyed-node-stats.git"
+cd samoyed-node-stats
+bash setup.sh
+```
+
+### Если вы уже в папке проекта
 
 ```bash
 bash setup.sh
