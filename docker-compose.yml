@@ -1,0 +1,7 @@
+services:
+  loudsamoyed:
+    build: .
+    container_name: loudsamoyed
+    restart: unless-stopped
+    env_file:
+      - .env
