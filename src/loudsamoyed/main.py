@@ -83,6 +83,18 @@ async def _fetch_nodes(client: httpx.AsyncClient, nodes_path: str) -> list[NodeS
 def _samoyed_prefix() -> str:
     return "🐾 LoudSamoyed"
 
+async def _egames_login_if_needed(client: httpx.AsyncClient) -> bool:
+    cookie_name = os.getenv("REMNAWAVE_EGAMES_COOKIE_NAME", "").strip()
+    cookie_value = os.getenv("REMNAWAVE_EGAMES_COOKIE_VALUE", "").strip()
+    if not cookie_name or not cookie_value:
+        return False
+
+    # Egames panel pattern:
+    #   GET /auth/login?<COOKIE_NAME>=<COOKIE_VALUE>
+    # This is expected to establish a session via Set-Cookie.
+    await client.get("/auth/login", params={cookie_name: cookie_value}, follow_redirects=True)
+    return True
+
 
 def _msg_node_down(node: NodeSnapshot) -> str:
     return (
@@ -113,7 +125,6 @@ async def run() -> None:
     chat_id = os.environ["TELEGRAM_CHAT_ID"]
     api_url = os.environ["REMNAWAVE_API_URL"].rstrip("/")
     api_token = os.getenv("REMNAWAVE_API_TOKEN", "").strip()
-    cookies = os.getenv("REMNAWAVE_COOKIES", "").strip()
     nodes_path = os.getenv("REMNAWAVE_NODES_PATH", "/api/nodes").strip() or "/api/nodes"
     verify_tls = _env_bool("REMNAWAVE_VERIFY_TLS", True)
 
@@ -134,8 +145,6 @@ async def run() -> None:
     headers: dict[str, str] = {}
     if api_token:
         headers["Authorization"] = f"Bearer {api_token}"
-    if cookies:
-        headers["Cookie"] = cookies
 
     timeout = httpx.Timeout(20.0, connect=10.0)
     limits = httpx.Limits(max_keepalive_connections=10, max_connections=20)
@@ -150,9 +159,15 @@ async def run() -> None:
         limits=limits,
         verify=verify_tls,
     ) as client:
+        try:
+            did_login = await _egames_login_if_needed(client)
+            if did_login:
+                log.info("Egames login handshake completed (session cookies stored).")
+        except Exception:
+            log.exception("Egames login handshake failed.")
 
         async def monitor_loop() -> None:
-            log.info("Samoyed is watching nodes. api_url=%s nodes_path=%s", api_url, nodes_path)
+            log.info("Samoyed is watching nodes. nodes_path=%s", nodes_path)
             while True:
                 started = time.time()
                 try:

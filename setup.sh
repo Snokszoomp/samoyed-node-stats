@@ -116,20 +116,23 @@ main() {
   fi
 
   local tg_token tg_chat api_url api_token api_cookies users_limit
+  local eg_cookie_name eg_cookie_value
 
   if [[ "$lang" == "1" ]]; then
     tg_token="$(prompt_secret "Telegram Bot Token")"
     tg_chat="$(prompt "Telegram Chat ID")"
     api_url="$(prompt "API URL панели Remnawave (например https://panel.example.com)")"
-    api_token="$(prompt_secret "API Token (JWT, можно пусто если используете Cookies)")"
-    api_cookies="$(prompt_secret "Cookies (можно пусто если используете API Token)")"
+    api_token="$(prompt_secret "API Token (JWT, можно пусто если Egames)")"
+    eg_cookie_name="$(prompt "Egames Cookie name (можно пусто если JWT)")"
+    eg_cookie_value="$(prompt_secret "Egames Cookie value (можно пусто если JWT)")"
     users_limit="$(prompt "Лимит пользователей на ноду" "250")"
   else
     tg_token="$(prompt_secret "Telegram Bot Token")"
     tg_chat="$(prompt "Telegram Chat ID")"
     api_url="$(prompt "Remnawave API URL (e.g. https://panel.example.com)")"
-    api_token="$(prompt_secret "API Token (JWT, optional if using Cookies)")"
-    api_cookies="$(prompt_secret "Cookies (optional if using API Token)")"
+    api_token="$(prompt_secret "API Token (JWT, optional if Egames)")"
+    eg_cookie_name="$(prompt "Egames Cookie name (optional if JWT)")"
+    eg_cookie_value="$(prompt_secret "Egames Cookie value (optional if JWT)")"
     users_limit="$(prompt "Users limit per node" "250")"
   fi
 
@@ -150,7 +153,8 @@ main() {
     echo
     write_env_kv "REMNAWAVE_API_URL" "$api_url"
     write_env_kv "REMNAWAVE_API_TOKEN" "$api_token"
-    write_env_kv "REMNAWAVE_COOKIES" "$api_cookies"
+    write_env_kv "REMNAWAVE_EGAMES_COOKIE_NAME" "$eg_cookie_name"
+    write_env_kv "REMNAWAVE_EGAMES_COOKIE_VALUE" "$eg_cookie_value"
     write_env_kv "REMNAWAVE_NODES_PATH" "/api/nodes"
     write_env_kv "REMNAWAVE_VERIFY_TLS" "true"
     echo
